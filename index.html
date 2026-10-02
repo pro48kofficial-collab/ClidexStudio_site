@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clidex Studio</title>
+<style>
+<style>
+:root[data-theme="light"]{--bg:#fff;--fg:#000;--mut:#555;--ln:#000;--card:rgba(255,255,255,.9);--hd:rgba(255,255,255,.85);--blob:#000;--sub:#bbb;--sub2:#ddd;--glow:rgba(0,0,0,.35);--s1:#aaa;--s2:#000;color-scheme:light}
+:root{--bg:#000;--fg:#fff;--mut:#9a9a9a;--ln:#fff;--card:rgba(0,0,0,.88);--hd:rgba(0,0,0,.8);--blob:#fff;--sub:#444;--sub2:#222;--glow:rgba(255,255,255,.5);--s1:#555;--s2:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+:root[data-theme="light"]{--bg:#fff;--fg:#000;--mut:#555;--ln:#000;--card:rgba(255,255,255,.9);--hd:rgba(255,255,255,.85);--blob:#000;--sub:#bbb;--sub2:#ddd;--glow:rgba(0,0,0,.35);--s1:#aaa;--s2:#000;color-scheme:light}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;color:var(--fg);font:16px/1.5 "Helvetica Neue",Arial,sans-serif;min-height:100vh;background:var(--bg);transition:background .4s,color .4s;position:relative;overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;filter:blur(90px);opacity:.28;background:var(--blob);width:60vmax;height:60vmax}
+body::before{top:-20vmax;left:-15vmax;animation:f1 18s ease-in-out infinite alternate}
+body::after{bottom:-25vmax;right:-20vmax;opacity:.2;animation:f2 22s ease-in-out infinite alternate}
+@keyframes f1{to{transform:translate(35vw,30vh) scale(1.2)}}
+@keyframes f2{to{transform:translate(-30vw,-25vh) scale(.85)}}
+.w{max-width:640px;margin:0 auto;padding:0 16px}
+header{border-bottom:2px solid var(--ln);position:sticky;top:env(safe-area-inset-top,0px);background:var(--hd);backdrop-filter:blur(8px);z-index:5}
+header .w{display:flex;justify-content:space-between;align-items:center;height:56px}
+.sh{background:linear-gradient(110deg,var(--s1) 0%,var(--s2) 25%,var(--s1) 50%,var(--s2) 75%,var(--s1) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:sh 4s linear infinite}
+@keyframes sh{to{background-position:-250% 0}}
+.logo{font-weight:900;letter-spacing:.15em;text-transform:uppercase}
+button,input,textarea{font:inherit;color:inherit}
+.btn{background:var(--fg);color:var(--bg);border:2px solid var(--fg);border-radius:999px;padding:8px 18px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;transition:.2s}
+.btn:hover{background:var(--bg);color:var(--fg);box-shadow:0 0 18px var(--glow)}
+.btn.o{background:transparent;color:var(--fg)}.btn.o:hover{background:var(--fg);color:var(--bg)}
+.btn.team{animation:pulse 2.4s ease-in-out infinite;box-shadow:0 0 0 0 var(--glow)}
+@keyframes pulse{50%{box-shadow:0 0 18px 4px var(--glow)}}
+#thm{padding:6px 12px;font-size:16px;letter-spacing:0}
+input[type=file]{color:var(--fg);font-size:14px;max-width:100%}
+input[type=file]::file-selector-button{font:inherit;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:transparent;color:var(--fg);border:2px solid var(--fg);border-radius:999px;padding:8px 16px;margin-right:10px;cursor:pointer;transition:.2s}
+input[type=file]::file-selector-button:hover{background:var(--fg);color:var(--bg)}
+.post p,.c,.post b,.cm summary{color:var(--fg)}
+.hero{padding:56px 0 28px;border-bottom:1px solid var(--ln);animation:up .8s both}
+h1{font-size:clamp(44px,14vw,76px);line-height:.95;margin:0 0 12px;text-transform:uppercase;letter-spacing:-.02em;font-weight:900}
+.mut{color:var(--mut);font-size:14px}
+.box{border:2px solid var(--ln);padding:16px;margin:20px 0;background:var(--card);animation:up .6s both}
+textarea,input[type=text]{width:100%;background:var(--card);border:2px solid var(--ln);padding:10px;margin:6px 0;border-radius:0;outline:none;transition:.2s}
+textarea:focus,input[type=text]:focus{box-shadow:0 0 14px var(--glow)}
+.post{border:2px solid var(--ln);margin:22px 0;background:var(--card);animation:up .6s both;transition:transform .25s,box-shadow .25s}
+.post:hover{transform:translateY(-3px);box-shadow:0 8px 30px var(--glow)}
+@keyframes up{from{opacity:0;transform:translateY(22px)}}
+.post .b{padding:14px}
+.post img,.post video{width:100%;display:block;border-bottom:2px solid var(--ln);max-height:520px;object-fit:cover}
+.post p{margin:0;white-space:pre-wrap;word-break:break-word}
+.rx{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rx button{background:transparent;color:var(--fg);border:2px solid var(--ln);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:15px;transition:.15s}
+.rx button:hover{transform:scale(1.12)}
+.rx button.on{background:transparent;color:var(--fg);box-shadow:0 0 12px var(--glow);font-weight:700;animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.3)}}
+.del,.cd{background:none;border:0;cursor:pointer;color:var(--mut);font-size:12px}.del{float:right}
+.cm{margin-top:12px;border-top:1px solid var(--sub);padding-top:8px}
+.cm summary{cursor:pointer;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.c{padding:6px 0;font-size:14px;border-bottom:1px solid var(--sub2);animation:up .4s both;word-break:break-word}
+.c b{margin-right:6px}
+.cf{display:flex;gap:8px;margin-top:8px}.cf input{margin:0}
+dialog{background:var(--bg);color:var(--fg);border:2px solid var(--ln);max-width:460px;width:calc(100% - 32px);padding:20px;animation:up .3s both}
+dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(4px)}
+.app{border-top:1px solid var(--ln);padding:8px 0;font-size:14px}
+footer{padding:40px 0;text-align:center;border-top:2px solid var(--ln);margin-top:40px}
+@media (prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}}
+</style></head><body>
+<header><div class="w"><span class="logo sh">Clidex Studio</span><div style="display:flex;gap:8px;align-items:center"><button class="btn o" id="thm" aria-label="Тема">☀️</button><button class="btn team" id="teamBtn">Команда</button></div></div></header>
+<main class="w">
+<section class="hero"><h1 class="sh">Clidex<br>Studio</h1><div class="mut">Студія розробки сайтів. Новини та оновлення — в нашому Telegram.</div>
+<p style="margin-top:20px"><a class="btn" id="tgLink" href="#" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Наш Telegram</a></p></section>
+<section id="feed"></section>
+<footer class="mut">© Clidex Studio</footer>
+</main>
+<dialog id="dlg"><b class="sh">ЗАЯВКА В КОМАНДУ РОЗРОБНИКІВ</b>
+<input type="text" id="nick" placeholder="Нік" maxlength="40">
+<input type="text" id="tg" placeholder="Ваш юзернейм у Telegram (@name)" maxlength="40">
+<textarea id="exp" rows="4" placeholder="Коротко про досвід у створенні сайтів" maxlength="600"></textarea>
+<div style="margin-top:8px"><button class="btn" id="send">Надіслати в Telegram</button> <button class="btn o" id="close">Закрити</button></div>
+<div class="mut" id="ds" style="margin-top:8px"></div></dialog>
+<script>
+const OWNER_TG="";
+const POSTS=[{ts:"2026-10-02",text:"Clidex Studio на зв'язку. Слідкуйте за новинами тут і в Telegram."}];
+const $=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement("div");d.textContent=s;return d.innerHTML};
+$("feed").innerHTML=POSTS.map(p=>`<article class="post"><div class="b"><div class="mut">${esc(p.ts)}</div><p>${esc(p.text)}</p></div></article>`).join("");
+const link=OWNER_TG?"https://t.me/"+OWNER_TG.replace("@",""):"";
+if(link)$("tgLink").href=link;else $("tgLink").style.display="none";
+function setTheme(t){document.documentElement.dataset.theme=t;$("thm").textContent=t==="light"?"\u{1F319}":"\u2600\uFE0F";try{localStorage.setItem("th",t)}catch(e){}}
+let th="dark";try{th=localStorage.getItem("th")||"dark"}catch(e){}
+setTheme(th);
+$("thm").onclick=()=>setTheme(document.documentElement.dataset.theme==="light"?"dark":"light");
+$("teamBtn").onclick=()=>$("dlg").showModal();
+$("close").onclick=()=>$("dlg").close();
+$("send").onclick=async()=>{
+  const nick=$("nick").value.trim(),tg=$("tg").value.trim(),exp=$("exp").value.trim();
+  if(!nick||!tg||!exp){$("ds").textContent="Заповніть усі поля";return}
+  const msg="Заявка в команду Clidex Studio\nНік: "+nick+"\nTelegram: "+tg+"\nДосвід: "+exp;
+  if(link){window.open(link+"?text="+encodeURIComponent(msg),"_blank");$("ds").textContent="Відкриваю Telegram…";return}
+  try{await navigator.clipboard.writeText(msg);$("ds").textContent="Заявку скопійовано — надішліть її власнику в Telegram"}
+  catch(e){$("ds").textContent="Не вдалося скопіювати"}
+};
+</script></body></html>
