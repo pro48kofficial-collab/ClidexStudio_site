@@ -59,40 +59,201 @@ dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(4px)}
 .app{border-top:1px solid var(--ln);padding:8px 0;font-size:14px}
 footer{padding:40px 0;text-align:center;border-top:2px solid var(--ln);margin-top:40px}
 @media (prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}}
+
+.tabs{display:flex;gap:8px;margin:22px 0 4px;flex-wrap:wrap}
+.tab{background:transparent;color:var(--fg);border:2px solid var(--fg);border-radius:999px;padding:8px 18px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;transition:.2s}
+.tab:hover{box-shadow:0 0 14px var(--glow)}
+.tab.on{background:var(--fg);color:var(--bg)}
+.pane{display:none}.pane.on{display:block}
+.card{padding:14px}.card h3{margin:0 0 4px;font-size:18px;text-transform:uppercase;letter-spacing:.05em}
+.card a{color:var(--fg)}
+.lk{color:var(--mut);font-size:12px;cursor:pointer;background:none;border:0;text-decoration:underline}
 </style></head><body>
 <header><div class="w"><span class="logo sh">Clidex Studio</span><div style="display:flex;gap:8px;align-items:center"><button class="btn o" id="thm" aria-label="Тема">☀️</button><button class="btn team" id="teamBtn">Команда</button></div></div></header>
 <main class="w">
 <section class="hero"><h1 class="sh">Clidex<br>Studio</h1><div class="mut">Студія розробки сайтів. Новини та оновлення — в нашому Telegram.</div>
-<p style="margin-top:20px"><a class="btn" id="tgLink" href="#" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Наш Telegram</a></p></section>
-<section id="feed"></section>
-<footer class="mut">© Clidex Studio</footer>
+<p style="margin-top:20px"><a class="btn" id="tgLink" href="#" style="text-decoration:none;display:inline-block">Наш Telegram-канал</a></p></section>
+
+<nav class="tabs"><button class="tab on" data-t="news">Новини</button><button class="tab" data-t="sites">Сайти</button><button class="tab" data-t="devs">Розробники</button></nav>
+
+<section class="pane on" id="news">
+<div id="composer" class="box" hidden><b class="sh">НОВИЙ ПОСТ</b>
+<textarea id="txt" rows="3" placeholder="Що нового?"></textarea>
+<input type="text" id="media" placeholder="Посилання на фото або відео (необов'язково)">
+<div style="margin-top:8px"><button class="btn" id="pub">Опублікувати</button> <span class="mut" id="st"></span></div></div>
+<div id="feed"></div></section>
+<section class="pane" id="sites"><div id="siteList"></div></section>
+<section class="pane" id="devs"><div id="devList"></div></section>
+
+<footer class="mut">© Clidex Studio<br><button class="lk" id="loginBtn">Вхід для власника</button></footer>
 </main>
+
 <dialog id="dlg"><b class="sh">ЗАЯВКА В КОМАНДУ РОЗРОБНИКІВ</b>
 <input type="text" id="nick" placeholder="Нік" maxlength="40">
 <input type="text" id="tg" placeholder="Ваш юзернейм у Telegram (@name)" maxlength="40">
 <textarea id="exp" rows="4" placeholder="Коротко про досвід у створенні сайтів" maxlength="600"></textarea>
-<div style="margin-top:8px"><button class="btn" id="send">Надіслати в Telegram</button> <button class="btn o" id="close">Закрити</button></div>
+<div style="margin-top:8px"><button class="btn" id="send">Надіслати</button> <button class="btn o" data-close>Закрити</button></div>
 <div class="mut" id="ds" style="margin-top:8px"></div></dialog>
+
+<dialog id="ldlg"><b class="sh">ВХІД ВЛАСНИКА</b>
+<input type="password" id="pw" placeholder="Пароль власника" autocomplete="current-password">
+<div style="margin-top:8px"><button class="btn" id="doLogin">Увійти</button> <button class="btn o" data-close>Закрити</button> <button class="btn o" id="out" hidden>Вийти</button></div>
+<div class="mut" id="ls" style="margin-top:8px"></div></dialog>
+
 <script>
-const OWNER_TG="https://t.me/clidex_studio";
-const POSTS=[{ts:"2026-10-02",text:"Clidex Studio на зв'язку. Слідкуйте за новинами тут і в Telegram."}];
+/* ============ НАЛАШТУВАННЯ — заповніть своїми даними ============ */
+const TG_CHANNEL   = "";   // посилання на ваш канал, напр. "https://t.me/clidex"
+
+// Список сайтів студії: додавайте рядки за зразком
+const SITES = [
+  // {name:"Назва сайту", url:"https://example.com", desc:"Короткий опис"},
+];
+// Розробники студії: додавайте рядки за зразком
+const DEVS = [
+  // {nick:"nickname", role:"Хто це: роль, чим займається", tg:"@username"},
+];
+/* =============================================================== */
+
 const $=id=>document.getElementById(id);
-const esc=s=>{const d=document.createElement("div");d.textContent=s;return d.innerHTML};
-$("feed").innerHTML=POSTS.map(p=>`<article class="post"><div class="b"><div class="mut">${esc(p.ts)}</div><p>${esc(p.text)}</p></div></article>`).join("");
-const link=OWNER_TG?"https://t.me/"+OWNER_TG.replace("@",""):"";
-if(link)$("tgLink").href=link;else $("tgLink").style.display="none";
-function setTheme(t){document.documentElement.dataset.theme=t;$("thm").textContent=t==="light"?"\u{1F319}":"\u2600\uFE0F";try{localStorage.setItem("th",t)}catch(e){}}
+const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML};
+const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"";
+
+// Telegram-канал
+if(TG_CHANNEL){$("tgLink").href=TG_CHANNEL;$("tgLink").target="_blank";$("tgLink").rel="noopener"}else $("tgLink").style.display="none";
+
+// Теми
+function setTheme(t){document.documentElement.dataset.theme=t;$("thm").textContent=t==="light"?"🌙":"☀️";try{localStorage.setItem("th",t)}catch(e){}}
 let th="dark";try{th=localStorage.getItem("th")||"dark"}catch(e){}
 setTheme(th);
 $("thm").onclick=()=>setTheme(document.documentElement.dataset.theme==="light"?"dark":"light");
+
+// Вкладки
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id===b.dataset.t));
+});
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+
+// Сайти та розробники
+$("siteList").innerHTML=SITES.length?SITES.map(s=>`<article class="post card"><h3>${esc(s.name)}</h3><div class="mut">${esc(s.desc)}</div>${safeUrl(s.url)?`<p style="margin:8px 0 0"><a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${esc(s.url)}</a></p>`:""}</article>`).join(""):'<p class="mut">Список сайтів скоро з\'явиться.</p>';
+$("devList").innerHTML=DEVS.length?DEVS.map(d=>`<article class="post card"><h3>${esc(d.nick)}</h3><div>${esc(d.role)}</div>${d.tg?`<p class="mut" style="margin:6px 0 0"><a href="https://t.me/${esc(String(d.tg).replace("@",""))}" target="_blank" rel="noopener">${esc(d.tg)}</a></p>`:""}</article>`).join(""):'<p class="mut">Список розробників скоро з\'явиться.</p>';
+
+// ---- API ----
+let token="";try{token=localStorage.getItem("adm")||""}catch(e){}
+let voter="";try{voter=localStorage.getItem("vid")||""}catch(e){}
+if(!voter){
+  voter=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():(String(Math.random()).slice(2)+String(Date.now()));
+  try{localStorage.setItem("vid",voter)}catch(e){}
+}
+async function api(path,opt){
+  opt=opt||{};
+  const h={"Content-Type":"application/json"};
+  if(token)h.Authorization="Bearer "+token;
+  const r=await fetch(path,{method:opt.method||"GET",headers:h,body:opt.body?JSON.stringify(opt.body):undefined});
+  let d=null;try{d=await r.json()}catch(e){}
+  if(!r.ok){const err=new Error((d&&d.error)||("Помилка "+r.status));err.status=r.status;throw err}
+  return d;
+}
+
+// ---- заявка в команду -> бот (через сервер) ----
 $("teamBtn").onclick=()=>$("dlg").showModal();
-$("close").onclick=()=>$("dlg").close();
 $("send").onclick=async()=>{
   const nick=$("nick").value.trim(),tg=$("tg").value.trim(),exp=$("exp").value.trim();
   if(!nick||!tg||!exp){$("ds").textContent="Заповніть усі поля";return}
-  const msg="Заявка в команду Clidex Studio\nНік: "+nick+"\nTelegram: "+tg+"\nДосвід: "+exp;
-  if(link){window.open(link+"?text="+encodeURIComponent(msg),"_blank");$("ds").textContent="Відкриваю Telegram…";return}
-  try{await navigator.clipboard.writeText(msg);$("ds").textContent="Заявку скопійовано — надішліть її власнику в Telegram"}
-  catch(e){$("ds").textContent="Не вдалося скопіювати"}
+  $("send").disabled=true;$("ds").textContent="Надсилаю…";
+  try{
+    await api("/api/apply",{method:"POST",body:{nick,tg,exp}});
+    $("ds").textContent="Заявку надіслано ✓";$("nick").value=$("tg").value=$("exp").value="";
+  }catch(e){$("ds").textContent=e.message||"Не вдалося надіслати, спробуйте пізніше"}
+  $("send").disabled=false;
 };
+
+// ---- новини, реакції, коментарі ----
+const GL=["♥","▲","✦","☻"];
+let owner=!!token,posts=[],openC=new Set(),drafts={},loaded=false;
+let myName="";try{myName=localStorage.getItem("nm")||""}catch(e){}
+
+function render(){
+  const ae=document.activeElement,keep=ae&&ae.dataset&&(ae.dataset.ci||ae.dataset.cn)?{k:ae.dataset.ci?"ci":"cn",id:ae.dataset.ci||ae.dataset.cn,pos:ae.selectionStart}:null;
+  if(!loaded){$("feed").innerHTML='<p class="mut">Завантаження…</p>';return}
+  if(!posts.length){$("feed").innerHTML='<p class="mut">Постів ще немає.</p>';return}
+  $("feed").innerHTML=posts.map(p=>{
+    const u=safeUrl(p.media);
+    const m=u?(/\.(mp4|webm|mov)(\?|$)/i.test(u)?`<video src="${esc(u)}" controls playsinline preload="metadata"></video>`:`<img src="${esc(u)}" alt="">`):"";
+    const d=new Date(p.created_at).toLocaleString("uk-UA",{dateStyle:"medium",timeStyle:"short"});
+    const btns=GL.map(g=>`<button data-p="${p.id}" data-g="${g}" class="${p.mine===g?"on":""}">${g} ${p.counts[g]||""}</button>`).join("");
+    const cs=p.comments.map(c=>`<div class="c"><b>${esc(c.name||"Гість")}</b>${esc(c.text)}${(owner||c.mine)?` <button class="cd" data-cdel="${c.id}">×</button>`:""}</div>`).join("");
+    return `<article class="post">${m}<div class="b">${owner?`<button class="del" data-del="${p.id}">видалити</button>`:""}<div class="mut">${d}</div>${p.text?`<p>${esc(p.text)}</p>`:""}<div class="rx">${btns}</div>
+<details class="cm" data-d="${p.id}" ${openC.has(String(p.id))?"open":""}><summary>Коментарі (${p.comments.length})</summary>${cs}
+<div class="cf"><input type="text" maxlength="30" placeholder="Ім'я" data-cn="${p.id}" value="${esc(myName)}" style="max-width:34%"><input type="text" maxlength="300" placeholder="Коментар…" data-ci="${p.id}" value="${esc(drafts[p.id]||"")}"><button class="btn" data-cs="${p.id}">→</button></div></details></div></article>`;
+  }).join("");
+  if(keep){const el=$("feed").querySelector(`[data-${keep.k}="${keep.id}"]`);if(el){el.focus();try{el.setSelectionRange(keep.pos,keep.pos)}catch(x){}}}
+}
+let busy=false,again=false;
+async function loadFeed(){
+  if(busy){again=true;return}
+  busy=true;
+  try{const d=await api("/api/feed?voter="+encodeURIComponent(voter));posts=d.posts||[];loaded=true;render()}
+  catch(e){if(!loaded){$("feed").innerHTML='<p class="mut">Не вдалося завантажити новини.</p>'}}
+  busy=false;
+  if(again){again=false;loadFeed()}
+}
+$("feed").addEventListener("toggle",e=>{const id=e.target.dataset&&e.target.dataset.d;if(id){e.target.open?openC.add(id):openC.delete(id)}},true);
+$("feed").addEventListener("input",e=>{
+  if(e.target.dataset.ci)drafts[e.target.dataset.ci]=e.target.value;
+  if(e.target.dataset.cn!==undefined){myName=e.target.value;try{localStorage.setItem("nm",myName)}catch(x){}}
+});
+$("feed").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.ci){const b=$("feed").querySelector(`[data-cs="${e.target.dataset.ci}"]`);b&&b.click()}});
+$("feed").onclick=async e=>{
+  const t=e.target.dataset;
+  try{
+    if(t.del){if(owner&&confirm("Видалити пост?")){await api("/api/posts/"+t.del,{method:"DELETE"});loadFeed()}return}
+    if(t.cdel){await api("/api/comments/"+t.cdel+"?voter="+encodeURIComponent(voter),{method:"DELETE"});loadFeed();return}
+    if(t.cs){
+      const text=(drafts[t.cs]||"").trim();
+      if(!text)return;
+      await api("/api/comments",{method:"POST",body:{post_id:Number(t.cs),name:myName.trim(),text,voter}});
+      drafts[t.cs]="";loadFeed();return;
+    }
+    if(t.p){await api("/api/react",{method:"POST",body:{post_id:Number(t.p),glyph:t.g,voter}});loadFeed()}
+  }catch(err){alert(err.message||"Помилка")}
+};
+
+// ---- публікація (власник) ----
+function applyOwner(){
+  $("composer").hidden=!owner;$("out").hidden=!owner;
+  $("loginBtn").textContent=owner?"Власник (вийти / змінити)":"Вхід для власника";
+  render();
+}
+$("pub").onclick=async()=>{
+  const text=$("txt").value.trim(),media=$("media").value.trim();
+  if(!text&&!media)return;
+  $("pub").disabled=true;$("st").textContent="Публікую…";
+  try{
+    await api("/api/posts",{method:"POST",body:{text,media}});
+    $("txt").value=$("media").value="";$("st").textContent="Готово";loadFeed();
+  }catch(e){
+    $("st").textContent="Помилка: "+e.message;
+    if(e.status===401){token="";try{localStorage.removeItem("adm")}catch(x){}owner=false;applyOwner()}
+  }
+  $("pub").disabled=false;
+};
+$("loginBtn").onclick=()=>$("ldlg").showModal();
+$("doLogin").onclick=async()=>{
+  try{
+    const d=await api("/api/login",{method:"POST",body:{password:$("pw").value}});
+    token=d.token;try{localStorage.setItem("adm",token)}catch(e){}
+    owner=true;$("pw").value="";$("ls").textContent="";$("ldlg").close();applyOwner();
+  }catch(e){$("ls").textContent=e.message}
+};
+$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("doLogin").click()});
+$("out").onclick=()=>{token="";try{localStorage.removeItem("adm")}catch(e){}owner=false;$("ldlg").close();applyOwner()};
+
+// ---- старт та реальний час ----
+applyOwner();
+if(token)api("/api/me").catch(e=>{if(e.status===401){token="";try{localStorage.removeItem("adm")}catch(x){}owner=false;applyOwner()}});
+loadFeed();
+try{const es=new EventSource("/api/events");es.onmessage=()=>loadFeed()}catch(e){setInterval(loadFeed,15000)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadFeed()});
 </script></body></html>
+  
