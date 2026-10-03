@@ -3,6 +3,7 @@
 const express = require("express");
 const crypto = require("crypto");
 const path = require("path");
+const fs = require("fs");
 
 const GLYPHS = ["♥", "▲", "✦", "☻"];
 
@@ -281,7 +282,18 @@ function createApp(pool, env, notify) {
     })
   );
 
-  app.use(express.static(path.join(__dirname, "public")));
+  // Сайт лежить у public/index.html. Якщо index.html завантажили в корінь репозиторію,
+  // віддаємо його звідти (лише цей файл, а не всю папку).
+  const pubDir = path.join(__dirname, "public");
+  if (fs.existsSync(path.join(pubDir, "index.html"))) {
+    app.use(express.static(pubDir));
+  } else {
+    app.get("/", (req, res) => {
+      const f = path.join(__dirname, "index.html");
+      if (fs.existsSync(f)) return res.sendFile(f);
+      res.status(404).send("index.html не знайдено. Покладіть його в папку public у репозиторії.");
+    });
+  }
   return app;
 }
 
@@ -305,4 +317,5 @@ if (require.main === module) {
       console.error(e);
       process.exit(1);
     });
-}
+  }
+  
